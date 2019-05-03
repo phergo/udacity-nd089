@@ -33,6 +33,36 @@ class Classifier(nn.Module):
         """
         super(Classifier, self).__init__()
 
+        # Keep all model's run-time settings in a dictionary in order to make it simpler to save/load model
+        # checkpoints. The config attribute provides a single-point-of-entry for all Network configuration settings
+        # that need to be persisted in a checkpoint.
+        self.config = {
+            'architecture': architecture,
+            'dropout': float(dropout),
+            'epochs': int(epochs),
+            'hidden_units': int(hidden_units),
+            'learning_rate': float(learning_rate),
+            'input_units': 1,  # To be set during network initialization based on architecture.
+            'output_units': int(output_units),
+        }
+
+        # Instance agnostic elements, no need to save-to/load-from checkpoint.
+        self.criterion = nn.NLLLoss()
+
+        # Class-level attributes declaration and initialization...
+        # The initialization method is encapsulated so that it can be called after checkpoint reload.
+        self.model = None
+        self.optimizer = None
+        self._initialize_network()
+
+    def _initialize_network(self):
+        """Initializes the Neural Network with the current run-time attributes.
+
+        This method is intended to be called during object construction or alternatively after a checkpoint has been
+        reloaded and potentially run-time attributes changed as per checkpoint.
+        """
+        pass
+
     def forward(self, features):
         """Performs a forward pass on the Neural Network.
         """
