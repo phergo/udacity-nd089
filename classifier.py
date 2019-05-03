@@ -5,6 +5,8 @@
 # DATE CREATED: 2019-05-02
 # REVISED DATE:
 # PURPOSE: Build a Neural Network to classify flower images.
+
+from os import path
 from torch import nn
 
 
@@ -48,12 +50,33 @@ class Classifier(nn.Module):
 
         # Instance agnostic elements, no need to save-to/load-from checkpoint.
         self.criterion = nn.NLLLoss()
+        self.data_dirs = self._get_data_directories(data_dir)
 
         # Class-level attributes declaration and initialization...
         # The initialization method is encapsulated so that it can be called after checkpoint reload.
         self.model = None
         self.optimizer = None
         self._initialize_network()
+
+    @staticmethod
+    def _get_data_directories(data_dir):
+        """Sets the paths to test, training and validation directories based on the (root) data_dir specified.
+
+        :param data_dir: Path to root directory containing images. It is assumed 'test', 'train', and 'valid'
+            sub-directories exist to be used in the different stages of the network preparation.
+        :return: A dictionary containing the path to the test, training and validation image directories.
+        """
+        data_dirs = {
+            'test': path.join(data_dir, 'test'),
+            'train': path.join(data_dir, 'train'),
+            'valid': path.join(data_dir, 'valid'),
+        }
+
+        # Check the existence of all required sub-directories.
+        for ds in data_dirs:
+            if not path.isdir(data_dirs[ds]):
+                raise NotADirectoryError(f'Directory "{data_dirs[ds]}" does not exist for the "{ds}" data set.')
+        return data_dirs
 
     def _initialize_network(self):
         """Initializes the Neural Network with the current run-time attributes.
