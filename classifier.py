@@ -9,7 +9,9 @@
 from os import path
 from torch import nn
 from torch import utils
-from torchvision import datasets, transforms
+from torchvision import datasets
+from torchvision import models
+from torchvision import transforms
 
 
 class Classifier(nn.Module):
@@ -137,13 +139,45 @@ class Classifier(nn.Module):
                                         ])
         }
 
+    def _get_model(self):
+        """Builds the actual model to be used in the classifier of our Neural Network. The feature parameters will
+        be frozen and a custom classifier will be added for training.
+
+        :return: The pre-trained model with frozen features and custom classifier.
+        """
+        try:
+            model_factory = getattr(models, self.config['architecture'])
+        except AttributeError:
+            raise ValueError(f'Unknown model architecture {self.config["architecture"]}.')
+
+        # Instantiate the required model.
+        model = model_factory(pretrained=True)
+
+        # Freeze the features parameters of the pre-trained network, we will only be training the classifier.
+        for param in model.parameters():
+            param.requires_grad = False
+
+        # Define the custom classifier for training.
+        clr = nn.Sequential(
+            nn.Linear(self.config['input_units'], self.config['hidden_units']),
+            nn.ReLU(),
+            nn.Dropout(p=self.config['dropout']),
+            nn.Linear(self.config['hidden_units'], self.config['output_units']),
+            nn.LogSoftmax(dim=1))
+
+        # Attach the custom classifier to the model.
+        model.classifier = clr
+
+        # Return the created model.
+        return model
+
     def _initialize_network(self):
         """Initializes the Neural Network with the current run-time attributes.
 
         This method is intended to be called during object construction or alternatively after a checkpoint has been
         reloaded and potentially run-time attributes changed as per checkpoint.
         """
-        pass
+        self.model = self._get_model()
 
     def forward(self, features):
         """Performs a forward pass on the Neural Network.
