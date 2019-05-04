@@ -8,6 +8,7 @@
 
 from os import path
 from torch import nn
+from torch import utils
 from torchvision import datasets, transforms
 
 
@@ -54,6 +55,7 @@ class Classifier(nn.Module):
         self.data_dirs = self._get_data_directories(data_dir)
         self.data_transforms = self._get_data_transforms()
         self.data_sets = self._get_image_datasets()
+        self.data_loaders = self._get_data_loaders()
 
         # Class-level attributes declaration and initialization...
         # The initialization method is encapsulated so that it can be called after checkpoint reload.
@@ -90,6 +92,17 @@ class Classifier(nn.Module):
             'test':  datasets.ImageFolder(self.data_dirs['test'],  transform=self.data_transforms['test']),
             'train': datasets.ImageFolder(self.data_dirs['train'], transform=self.data_transforms['train']),
             'valid': datasets.ImageFolder(self.data_dirs['valid'], transform=self.data_transforms['valid']),
+        }
+
+    def _get_data_loaders(self):
+        """Defines the dataloaders using the defined datasets.
+
+        :return: The dataloaders used to retrieve the images for training, validation and testing.
+        """
+        return {
+            'test':  utils.data.DataLoader(self.data_sets['test'],  batch_size=64),
+            'train': utils.data.DataLoader(self.data_sets['train'], batch_size=64, shuffle=True),
+            'valid': utils.data.DataLoader(self.data_sets['valid'], batch_size=64),
         }
 
     @staticmethod
