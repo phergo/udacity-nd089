@@ -8,6 +8,7 @@
 
 from os import path
 from torch import nn
+from torchvision import transforms
 
 
 class Classifier(nn.Module):
@@ -77,6 +78,38 @@ class Classifier(nn.Module):
             if not path.isdir(data_dirs[ds]):
                 raise NotADirectoryError(f'Directory "{data_dirs[ds]}" does not exist for the "{ds}" data set.')
         return data_dirs
+
+    @staticmethod
+    def _get_data_transforms():
+        """Defines the transforms for the training, validation, and testing sets.
+
+        The pre-trained networks were trained on the ImageNet dataset where each color channel was normalized
+        separately. All three sets, the means, and standard deviations of the images are normalized to what the network
+        expects. For the means, it's [0.485, 0.456, 0.406] and for the standard deviations [0.229, 0.224, 0.225],
+        calculated from the ImageNet images. These values will shift each color channel to be centered at 0 and range
+        from -1 to 1.
+
+        :return: the transforms dictionary for the training, validation, and testing sets.
+        """
+        return {
+            'train': transforms.Compose([transforms.RandomRotation(30),
+                                         transforms.RandomResizedCrop(224),
+                                         transforms.RandomHorizontalFlip(),
+                                         transforms.ToTensor(),
+                                         ]),
+
+            'valid': transforms.Compose([transforms.Resize(255),
+                                         transforms.CenterCrop(224),
+                                         transforms.ToTensor(),
+                                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                         ]),
+
+            'test': transforms.Compose([transforms.Resize(255),
+                                        transforms.CenterCrop(224),
+                                        transforms.ToTensor(),
+                                        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                        ])
+        }
 
     def _initialize_network(self):
         """Initializes the Neural Network with the current run-time attributes.
