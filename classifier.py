@@ -52,6 +52,7 @@ class Classifier(nn.Module):
         # Instance agnostic elements, no need to save-to/load-from checkpoint.
         self.criterion = nn.NLLLoss()
         self.data_dirs = self._get_data_directories(data_dir)
+        self.data_transforms = self._get_data_transforms()
 
         # Class-level attributes declaration and initialization...
         # The initialization method is encapsulated so that it can be called after checkpoint reload.
