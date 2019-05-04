@@ -8,7 +8,7 @@
 
 from os import path
 from torch import nn
-from torchvision import transforms
+from torchvision import datasets, transforms
 
 
 class Classifier(nn.Module):
@@ -53,6 +53,7 @@ class Classifier(nn.Module):
         self.criterion = nn.NLLLoss()
         self.data_dirs = self._get_data_directories(data_dir)
         self.data_transforms = self._get_data_transforms()
+        self.data_sets = self._get_image_datasets()
 
         # Class-level attributes declaration and initialization...
         # The initialization method is encapsulated so that it can be called after checkpoint reload.
@@ -79,6 +80,17 @@ class Classifier(nn.Module):
             if not path.isdir(data_dirs[ds]):
                 raise NotADirectoryError(f'Directory "{data_dirs[ds]}" does not exist for the "{ds}" data set.')
         return data_dirs
+
+    def _get_image_datasets(self):
+        """Loads the datasets using ImageFolder method.
+
+        :return: the image datasets loaded with ImageFolder method.
+        """
+        return {
+            'test':  datasets.ImageFolder(self.data_dirs['test'],  transform=self.data_transforms['test']),
+            'train': datasets.ImageFolder(self.data_dirs['train'], transform=self.data_transforms['train']),
+            'valid': datasets.ImageFolder(self.data_dirs['valid'], transform=self.data_transforms['valid']),
+        }
 
     @staticmethod
     def _get_data_transforms():
