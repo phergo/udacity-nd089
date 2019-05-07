@@ -6,6 +6,7 @@
 # REVISED DATE:
 # PURPOSE: Build a Neural Network to classify flower images.
 
+import torch
 from os import path
 from torch import nn
 from torch import optim
@@ -59,6 +60,7 @@ class Classifier(nn.Module):
         self.data_transforms = self._get_data_transforms()
         self.data_sets = self._get_image_datasets()
         self.data_loaders = self._get_data_loaders()
+        self.device = self._get_processing_device(use_gpu)
 
         # Class-level attributes declaration and initialization...
         # The initialization method is encapsulated so that it can be called after checkpoint reload.
@@ -172,6 +174,18 @@ class Classifier(nn.Module):
         # Return the created model.
         return model
 
+    @staticmethod
+    def _get_processing_device(use_gpu):
+        if not use_gpu:
+            return torch.device('cpu')
+        else:
+            if torch.cuda.is_available():
+                device = torch.device('cuda')
+            else:
+                device = torch.device('cpu')
+                print('WARNING: a GPU is not available, using the CPU instead.')
+        return device
+
     def _initialize_network(self):
         """Initializes the Neural Network with the current run-time attributes.
 
@@ -180,6 +194,7 @@ class Classifier(nn.Module):
         """
         self.model = self._get_model()
         self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.config['learning_rate'])
+        self.model.to(self.device)
 
     def forward(self, features):
         """Performs a forward pass on the Neural Network.
