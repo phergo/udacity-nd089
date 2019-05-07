@@ -8,6 +8,7 @@
 
 from os import path
 from torch import nn
+from torch import optim
 from torch import utils
 from torchvision import datasets
 from torchvision import models
@@ -178,6 +179,7 @@ class Classifier(nn.Module):
         reloaded and potentially run-time attributes changed as per checkpoint.
         """
         self.model = self._get_model()
+        self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.config['learning_rate'])
 
     def forward(self, features):
         """Performs a forward pass on the Neural Network.
