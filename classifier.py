@@ -199,4 +199,4 @@ class Classifier(nn.Module):
     def forward(self, features):
         """Performs a forward pass on the Neural Network.
         """
-        return self.forward(features)
+        return self.model.forward(features)
