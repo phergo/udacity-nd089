@@ -193,7 +193,11 @@ class Classifier(nn.Module):
             nn.LogSoftmax(dim=1))
 
         # Attach the custom classifier to the model.
-        model.classifier = clr
+        # All known models use either 'fc' or 'classifier' attribute.
+        if hasattr(model, 'fc'):
+            model.fc = clr
+        else:
+            model.classifier = clr
 
         # Return the created model.
         return model
@@ -217,7 +221,10 @@ class Classifier(nn.Module):
         reloaded and potentially run-time attributes changed as per checkpoint.
         """
         self.model = self._get_model()
-        self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.config['learning_rate'])
+        if hasattr(self.model, 'fc'):
+            self.optimizer = optim.Adam(self.model.fc.parameters(), lr=self.config['learning_rate'])
+        else:
+            self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.config['learning_rate'])
         self.model.to(self.device)
 
     def forward(self, features):
