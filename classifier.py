@@ -6,6 +6,7 @@
 # REVISED DATE:
 # PURPOSE: Build a Neural Network to classify flower images.
 
+import time
 import torch
 from os import path
 from torch import nn
@@ -50,7 +51,7 @@ class Classifier(nn.Module):
             'epochs': int(epochs),
             'hidden_units': int(hidden_units),
             'learning_rate': float(learning_rate),
-            'input_units': 1,  # To be set during network initialization based on architecture.
+            'input_units': 9216,  # To be set during network initialization based on architecture.
             'output_units': int(output_units),
         }
 
@@ -200,3 +201,35 @@ class Classifier(nn.Module):
         """Performs a forward pass on the Neural Network.
         """
         return self.model.forward(features)
+
+    def train(self, print_every=5):
+        """Perform the training of the model's custom classifier.
+
+        :param print_every: Print statistics every 'print_every' steps
+        """
+        if self.data_dirs is None:
+            print('No input data folders specified, unable to train the network.')
+            return None
+
+        trainloader = self.data_loaders['train']
+
+        step = 0
+        start_time = time.time()
+        for epoch in range(1, self.config['epochs']+1):
+            running_loss = 0
+            for images, labels in trainloader:
+                step += 1
+                images, labels = images.to(self.device), labels.to(self.device)
+
+                self.optimizer.zero_grad()  # Don't forget to zero-out the gradients!!!
+                output = self.forward(images)
+                loss = self.criterion(output, labels)
+                loss.backward()
+                self.optimizer.step()
+                running_loss += loss.item()
+
+                if step % print_every == 0:
+                    print('Validating...')
+                    running_loss = 0
+        elapsed_time = time.time() - start_time
+        print(elapsed_time)
