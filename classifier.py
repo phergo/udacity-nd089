@@ -51,7 +51,7 @@ class Classifier(nn.Module):
             'epochs': int(epochs),
             'hidden_units': int(hidden_units),
             'learning_rate': float(learning_rate),
-            'input_units': 9216,  # To be set during network initialization based on architecture.
+            'input_units': 1,  # To be set during network initialization based on architecture.
             'output_units': int(output_units),
         }
 
@@ -99,6 +99,28 @@ class Classifier(nn.Module):
             'train': datasets.ImageFolder(self.data_dirs['train'], transform=self.data_transforms['train']),
             'valid': datasets.ImageFolder(self.data_dirs['valid'], transform=self.data_transforms['valid']),
         }
+
+    @staticmethod
+    def _get_input_units(model):
+        """Return the input unit tensor size based on the current model selected.
+
+        :param model: The model instance object for which the input size must be selected.
+        :return: The input features size for the architecture specified.
+        """
+        if type(model).__name__ == 'AlexNet':
+            return model.classifier[1].in_features
+        elif type(model).__name__ == 'DenseNet':
+            return model.classifier.in_features
+        elif type(model).__name__ == 'Inception':
+            return model.fc.in_features
+        elif type(model).__name__ == 'ResNet':
+            return model.fc.in_features
+        elif type(model).__name__ == 'SqueezeNet':
+            return model.classifier[1].in_channels
+        elif type(model).__name__ == 'VGG':
+            return model.classifier[0].in_features
+        else:
+            return 0
 
     def _get_data_loaders(self):
         """Defines the dataloaders using the defined datasets.
@@ -156,6 +178,7 @@ class Classifier(nn.Module):
 
         # Instantiate the required model.
         model = model_factory(pretrained=True)
+        self.config['input_units'] = self._get_input_units(model)
 
         # Freeze the features parameters of the pre-trained network, we will only be training the classifier.
         for param in model.parameters():
