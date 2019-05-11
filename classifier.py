@@ -241,6 +241,23 @@ class Classifier(nn.Module):
             self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.config['learning_rate'])
         self.model.to(self.device)
 
+    def _print_stats(self, epoch, step, running_loss, test_loss, accuracy, sample_size, data_length):
+        """Print the stats for the running training phase.
+
+        :param epoch: The current epoch iteration
+        :param step: The current step, i.e. image batch number being processed.
+        :param running_loss: The running loss for the current sample size.
+        :param test_loss: The test loss for the current sample size.
+        :param accuracy: The accuracy for the current sample size.
+        :param sample_size: The size of the current processing sample.
+        :param data_length: The length of the dataloader used to generate the statistics.
+        """
+        print(f"Epoch {epoch: >3} / {self.config['epochs']}, "
+              f"Step {step: >5}: "
+              f"Train loss: {running_loss / sample_size:7.3f}.. "
+              f"Test loss: {test_loss / data_length:7.3f}.. "
+              f"Test accuracy: {accuracy / data_length:6.3f}")
+
     def _validation(self, data_loader):
         """Test a trained model using the specified data_loader
 
@@ -256,7 +273,7 @@ class Classifier(nn.Module):
                 test_loss += self.criterion(output, labels).item()
                 accuracy += self._get_accuracy(output, labels)
             self.model.train()
-        return test_loss, accuracy
+        return test_loss, accuracy, len(data_loader)
 
     def forward(self, features):
         """Performs a forward pass on the Neural Network.
@@ -275,7 +292,7 @@ class Classifier(nn.Module):
         trainloader = self.data_loaders['train']
         validloader = self.data_loaders['valid']
 
-        step = 0
+        accuracy = epoch = running_loss = step = test_loss = 0
         start_time = time.time()
         for epoch in range(1, self.config['epochs']+1):
             running_loss = 0
@@ -291,8 +308,9 @@ class Classifier(nn.Module):
                 running_loss += loss.item()
 
                 if step % print_every == 0:
-                    test_loss, accuracy = self._validation(validloader)
-                    print('test_loss:', test_loss, '; accuracy:', accuracy)
+                    test_loss, accuracy, data_length = self._validation(validloader)
+                    self._print_stats(epoch, step, running_loss, test_loss, accuracy, print_every, data_length)
                     running_loss = 0
         elapsed_time = time.time() - start_time
+        self._print_stats(epoch, step, running_loss, test_loss, accuracy, print_every, data_length)
         print(elapsed_time)
