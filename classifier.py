@@ -70,6 +70,20 @@ class Classifier(nn.Module):
         self._initialize_network()
 
     @staticmethod
+    def _get_accuracy(logarithmic_probabilities, labels):
+        """Calculates the accuracy of the model.
+
+        :param logarithmic_probabilities: The LogSoftmax output from the model.
+        :param labels: The known labels to compare against the predicted ones.
+        :return: The calculated accuracy of the model.
+        """
+        ps = torch.exp(logarithmic_probabilities)
+        top_ps, top_class = ps.topk(1, dim=1)
+        equality = top_class == labels.view(*top_class.shape)
+        accuracy = equality.type_as(torch.FloatTensor()).mean()
+        return accuracy
+
+    @staticmethod
     def _get_data_directories(data_dir):
         """Sets the paths to test, training and validation directories based on the (root) data_dir specified.
 
@@ -227,6 +241,23 @@ class Classifier(nn.Module):
             self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=self.config['learning_rate'])
         self.model.to(self.device)
 
+    def _validation(self, data_loader):
+        """Test a trained model using the specified data_loader
+
+        :param data_loader: The image set data_loader to be tested.
+        :return: The (test_loss, accuracy) tuple.
+        """
+        accuracy = test_loss = 0
+        with torch.no_grad():
+            self.model.eval()
+            for images, labels in data_loader:
+                images, labels = images.to(self.device), labels.to(self.device)
+                output = self.model.forward(images)
+                test_loss += self.criterion(output, labels).item()
+                accuracy += self._get_accuracy(output, labels)
+            self.model.train()
+        return test_loss, accuracy
+
     def forward(self, features):
         """Performs a forward pass on the Neural Network.
         """
@@ -242,6 +273,7 @@ class Classifier(nn.Module):
             return None
 
         trainloader = self.data_loaders['train']
+        validloader = self.data_loaders['valid']
 
         step = 0
         start_time = time.time()
@@ -259,7 +291,8 @@ class Classifier(nn.Module):
                 running_loss += loss.item()
 
                 if step % print_every == 0:
-                    print('Validating...')
+                    test_loss, accuracy = self._validation(validloader)
+                    print('test_loss:', test_loss, '; accuracy:', accuracy)
                     running_loss = 0
         elapsed_time = time.time() - start_time
         print(elapsed_time)
