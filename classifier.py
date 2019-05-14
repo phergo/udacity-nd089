@@ -300,6 +300,18 @@ class Classifier(nn.Module):
         """
         return self.model.forward(features)
 
+    def test(self, show_progress=True):
+        """Perform validation on the test dataset in order to establish the model's accuracy.
+
+        :param show_progress: Whether a series of dots are shown to indicate progress
+        """
+        if self.data_dirs is None:
+            print('No input data folders specified, unable to test the network.')
+            return None
+
+        test_loss, accuracy, _ = self._validation(self.data_loaders['test'], show_progress)
+        print(f"Estimated network accuracy (on test dataset): {accuracy / len(self.data_loaders['test']):6.3f}")
+
     def train(self, print_every=5, show_progress=True):
         """Perform the training of the model's custom classifier.
 
