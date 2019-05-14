@@ -265,16 +265,29 @@ class Classifier(nn.Module):
         ss = int((elapsed % 3600) % 60)
         return str(hh).zfill(2), str(mm).zfill(2), str(ss).zfill(2)
 
-    def _validation(self, data_loader):
+    @staticmethod
+    def _spinning_cursor():
+        """Yields spinning-cursor characters in sequence.
+
+        :return: A spinning-cursor character.
+        """
+        while True:
+            for cursor in '|/-\\':
+                yield cursor + '\b'
+
+    def _validation(self, data_loader, show_progress=True):
         """Test a trained model using the specified data_loader
 
         :param data_loader: The image set data_loader to be tested.
+        :param show_progress: Whether a series of dots are shown to indicate progress
         :return: The (test_loss, accuracy) tuple.
         """
+        spinner = self._spinning_cursor()
         accuracy = test_loss = 0
         with torch.no_grad():
             self.model.eval()
             for images, labels in data_loader:
+                print(next(spinner) if show_progress else '', end='', flush=True)
                 images, labels = images.to(self.device), labels.to(self.device)
                 output = self.model.forward(images)
                 test_loss += self.criterion(output, labels).item()
@@ -317,7 +330,7 @@ class Classifier(nn.Module):
                 running_loss += loss.item()
 
                 if step % print_every == 0:
-                    test_loss, accuracy, data_length = self._validation(validloader)
+                    test_loss, accuracy, data_length = self._validation(validloader, show_progress)
                     self._print_stats(epoch, step, running_loss, test_loss, accuracy, print_every, data_length)
                     running_loss = 0
         elapsed_time = time.time() - start_time
