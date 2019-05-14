@@ -258,6 +258,13 @@ class Classifier(nn.Module):
               f"Test loss: {test_loss / data_length:7.3f}.. "
               f"Test accuracy: {accuracy / data_length:6.3f}")
 
+    @staticmethod
+    def _seconds_to_hhmmss(elapsed):
+        hh = int((elapsed / 3600))
+        mm = int((elapsed % 3600) / 60)
+        ss = int((elapsed % 3600) % 60)
+        return str(hh).zfill(2), str(mm).zfill(2), str(ss).zfill(2)
+
     def _validation(self, data_loader):
         """Test a trained model using the specified data_loader
 
@@ -280,10 +287,11 @@ class Classifier(nn.Module):
         """
         return self.model.forward(features)
 
-    def train(self, print_every=5):
+    def train(self, print_every=5, show_progress=True):
         """Perform the training of the model's custom classifier.
 
         :param print_every: Print statistics every 'print_every' steps
+        :param show_progress: Whether a series of dots are shown to indicate progress
         """
         if self.data_dirs is None:
             print('No input data folders specified, unable to train the network.')
@@ -298,6 +306,7 @@ class Classifier(nn.Module):
             running_loss = 0
             for images, labels in trainloader:
                 step += 1
+                print('.' if show_progress else '', end='', flush=True)
                 images, labels = images.to(self.device), labels.to(self.device)
 
                 self.optimizer.zero_grad()  # Don't forget to zero-out the gradients!!!
@@ -312,5 +321,7 @@ class Classifier(nn.Module):
                     self._print_stats(epoch, step, running_loss, test_loss, accuracy, print_every, data_length)
                     running_loss = 0
         elapsed_time = time.time() - start_time
+
+        print('\n\nDONE: ')
         self._print_stats(epoch, step, running_loss, test_loss, accuracy, print_every, data_length)
-        print(elapsed_time)
+        print("Total training elapse time: {0}:{1}:{2}".format(*self._seconds_to_hhmmss(elapsed_time)))
