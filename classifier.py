@@ -6,9 +6,10 @@
 # REVISED DATE:
 # PURPOSE: Build a Neural Network to classify flower images.
 
+import os
 import time
 import torch
-from os import path
+
 from PIL import Image
 from torch import nn
 from torch import optim
@@ -72,6 +73,11 @@ class Classifier(nn.Module):
         self._initialize_network()
 
     @staticmethod
+    def _enforce_checkpoint_extension(file_name):
+        root, ext = os.path.splitext(file_name)
+        return (root + '.pth') if ext == '' else file_name
+
+    @staticmethod
     def _get_accuracy(logarithmic_probabilities, labels):
         """Calculates the accuracy of the model.
 
@@ -94,14 +100,14 @@ class Classifier(nn.Module):
         :return: A dictionary containing the path to the test, training and validation image directories.
         """
         data_dirs = {
-            'test': path.join(data_dir, 'test'),
-            'train': path.join(data_dir, 'train'),
-            'valid': path.join(data_dir, 'valid'),
+            'test': os.path.join(data_dir, 'test'),
+            'train': os.path.join(data_dir, 'train'),
+            'valid': os.path.join(data_dir, 'valid'),
         }
 
         # Check the existence of all required sub-directories.
         for ds in data_dirs:
-            if not path.isdir(data_dirs[ds]):
+            if not os.path.isdir(data_dirs[ds]):
                 raise NotADirectoryError(f'Directory "{data_dirs[ds]}" does not exist for the "{ds}" data set.')
         return data_dirs
 
@@ -326,6 +332,22 @@ class Classifier(nn.Module):
         classes = classes.tolist()[0]
 
         return probabilities, classes
+
+    def save_checkpoint(self, file_name, folder_name='checkpoints'):
+        """Saves a Torch checkpoint with the trained network for later use.
+
+        :param folder_name: The target folder (dir) name where the checkpoint will be saved.
+        :param file_name: The target file name that will be used for the checkpoint. Common extension is .pth
+        """
+        checkpoint = {'config': self.config,
+                      'state_dict': self.model.state_dict()}
+        file_name = '' if file_name is None else file_name.strip()
+        folder_name = '' if folder_name is None else folder_name.strip()
+        if folder_name != '':
+            if not os.path.isdir(folder_name):
+                os.makedirs(folder_name)
+        torch.save(checkpoint, os.path.join(folder_name, self._enforce_checkpoint_extension(file_name)))
+        print('Checkpoint saved successfully')  # Will not get here if exception
 
     def test(self, show_progress=True):
         """Perform validation on the test dataset in order to establish the model's accuracy.
