@@ -9,9 +9,11 @@
 import time
 import torch
 from os import path
+from PIL import Image
 from torch import nn
 from torch import optim
 from torch import utils
+from torch.autograd import Variable
 from torchvision import datasets
 from torchvision import models
 from torchvision import transforms
@@ -285,7 +287,7 @@ class Classifier(nn.Module):
         spinner = self._spinning_cursor()
         accuracy = test_loss = 0
         with torch.no_grad():
-            self.model.eval()
+            self.model.eval()  # Prevent model from training on validation.
             for images, labels in data_loader:
                 print(next(spinner) if show_progress else '', end='', flush=True)
                 images, labels = images.to(self.device), labels.to(self.device)
@@ -299,6 +301,31 @@ class Classifier(nn.Module):
         """Performs a forward pass on the Neural Network.
         """
         return self.model.forward(features)
+
+    def predict(self, image_path, top_k=5):
+        """Predict the specified top classes of the provided image (file_path).
+
+        :param image_path: The file path of the image to classify/predict.
+        :param top_k: The number of most likely classes to return.
+        :return: The top_k most likely classes of the image (filename) specified.
+        """
+        image = Image.open(image_path)
+        img_tensor = (self.data_transforms['test'](image)).float()
+        img_variable = Variable(img_tensor.unsqueeze(0))
+        img_variable = img_variable.to(self.device)
+
+        with torch.no_grad():
+            self.model.eval()  # Prevent model from training while predicting image.
+            nn_output = self.model.forward(img_variable)
+            ps = torch.exp(nn_output)
+            probabilities, classes = ps.topk(top_k, dim=1)
+            self.model.train()
+
+        # Convert top probabilities and classes to python lists as per project requirements.
+        probabilities = probabilities.tolist()[0]
+        classes = classes.tolist()[0]
+
+        return probabilities, classes
 
     def test(self, show_progress=True):
         """Perform validation on the test dataset in order to establish the model's accuracy.
