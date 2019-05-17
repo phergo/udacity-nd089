@@ -52,7 +52,7 @@ class Classifier(nn.Module):
         self.config = {
             'architecture': architecture,
             'category_names': self._read_category_names_json(category_names_file),
-            'category_to_idx': None,  # Class-To-IDX mapping from training dataset.
+            'class_idx_to_category': None,
             'dropout': float(dropout),
             'epochs': int(epochs),
             'hidden_units': int(hidden_units),
@@ -93,6 +93,15 @@ class Classifier(nn.Module):
         equality = top_class == labels.view(*top_class.shape)
         accuracy = equality.type_as(torch.FloatTensor()).mean()
         return accuracy
+
+    def _get_class_name(self, class_idx):
+        """Returns the class (category) description for the provided class index.
+
+        :param class_idx: The class index for which the description must be returned.
+        :return: The descriptiong for the class index specified.
+        """
+        class_category = self.config['class_idx_to_category'][class_idx]  # Get the Class ID based on the index.
+        return dict(self.config['category_names'])[class_category] if class_idx is not None else None
 
     @staticmethod
     def _get_data_directories(data_dir):
@@ -381,6 +390,10 @@ class Classifier(nn.Module):
         probabilities = probabilities.tolist()[0]
         classes = classes.tolist()[0]
 
+        # If class-to-idx mapping is present, return the class names as opposed to the indexes.
+        if (self.config['category_names'] is not None) and (self.config['class_idx_to_category'] is not None):
+            classes = list(self._get_class_name(idx) for idx in classes)
+
         return probabilities, classes
 
     def save_checkpoint(self, file_name, folder_name='checkpoints'):
@@ -441,7 +454,7 @@ class Classifier(nn.Module):
                     test_loss, accuracy, data_length = self._validation(self.data_loaders['valid'], show_progress)
                     self._print_stats(epoch, step, running_loss, test_loss, accuracy, print_every, data_length)
                     running_loss = 0
-        self.config['category_to_idx'] = self._get_idx_to_class(self.data_sets['train'].class_to_idx)
+        self.config['class_idx_to_category'] = self._get_idx_to_class(self.data_sets['train'].class_to_idx)
         elapsed_time = time.time() - start_time
 
         print('\n\nDONE: ')
