@@ -52,6 +52,7 @@ class Classifier(nn.Module):
         self.config = {
             'architecture': architecture,
             'category_names': self._read_category_names_json(category_names_file),
+            'category_to_idx': None,  # Class-To-IDX mapping from training dataset.
             'dropout': float(dropout),
             'epochs': int(epochs),
             'hidden_units': int(hidden_units),
@@ -188,6 +189,25 @@ class Classifier(nn.Module):
                                         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                         ])
         }
+
+    @staticmethod
+    def _get_idx_to_class(class_to_idx):
+        """Creates an ordered list with the class ID's based on the class_to_idx dictionary provided.
+
+        The standard dataset.class_to_idx dictionary has a mapping between the class ID (key) and the tensor index
+        (value); however, the predict() method returns the indexes from which the class IDs need to be obtained.
+        Performing a dictionary key look-up by value every time a class ID is needed is a costly process, hence, this
+        method builds a list in which every position (i.e. index) of the list represents the corresponding class ID
+        of the same index in the probabilities tensor/array. This list can be stored in the checkpoint and reused as
+        many times as needed.
+
+        :param class_to_idx: The class_to_idx dictionary from the 'train' dataset.
+        :return: List of class ID's. Each position has the matching class ID for the network's probabilities output.
+        """
+        lst = [None] * len(class_to_idx)
+        for key, value in class_to_idx.items():
+            lst[value] = key
+        return lst
 
     def _get_model(self):
         """Builds the actual model to be used in the classifier of our Neural Network. The feature parameters will
@@ -401,14 +421,11 @@ class Classifier(nn.Module):
             print('No input data folders specified, unable to train the network.')
             return None
 
-        trainloader = self.data_loaders['train']
-        validloader = self.data_loaders['valid']
-
         accuracy = epoch = running_loss = step = test_loss = 0
         start_time = time.time()
         for epoch in range(1, self.config['epochs']+1):
             running_loss = 0
-            for images, labels in trainloader:
+            for images, labels in self.data_loaders['train']:
                 step += 1
                 print('.' if show_progress else '', end='', flush=True)
                 images, labels = images.to(self.device), labels.to(self.device)
@@ -421,9 +438,10 @@ class Classifier(nn.Module):
                 running_loss += loss.item()
 
                 if step % print_every == 0:
-                    test_loss, accuracy, data_length = self._validation(validloader, show_progress)
+                    test_loss, accuracy, data_length = self._validation(self.data_loaders['valid'], show_progress)
                     self._print_stats(epoch, step, running_loss, test_loss, accuracy, print_every, data_length)
                     running_loss = 0
+        self.config['category_to_idx'] = self._get_idx_to_class(self.data_sets['train'].class_to_idx)
         elapsed_time = time.time() - start_time
 
         print('\n\nDONE: ')
