@@ -308,6 +308,20 @@ class Classifier(nn.Module):
         """
         return self.model.forward(features)
 
+    def load_checkpoint(self, file_name, folder_name='checkpoints'):
+        """Loads a Torch checkpoint with the trained network from a previous run.
+
+        :param folder_name: The source folder (dir) name from where the checkpoint will be loaded.
+        :param file_name: The source file name where the checkpoint is stored.
+        """
+        file_name = '' if file_name is None else file_name.strip()
+        folder_name = '' if folder_name is None else folder_name.strip()
+        checkpoint = torch.load(os.path.join(folder_name, self._enforce_checkpoint_extension(file_name)))
+        self.config = checkpoint['config']
+        self._initialize_network()  # Initialize the network with the retrieved configuration.
+        self.model.load_state_dict(checkpoint['state_dict'])
+        print('Checkpoint loaded successfully')  # Will not get here if exception.
+
     def predict(self, image_path, top_k=5):
         """Predict the specified top classes of the provided image (file_path).
 
