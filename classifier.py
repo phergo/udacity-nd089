@@ -7,6 +7,7 @@
 # PURPOSE: Build a Neural Network to classify flower images.
 
 import os
+import json
 import time
 import torch
 
@@ -50,6 +51,7 @@ class Classifier(nn.Module):
         # that need to be persisted in a checkpoint.
         self.config = {
             'architecture': architecture,
+            'category_names': self._read_category_names_json(category_names_file),
             'dropout': float(dropout),
             'epochs': int(epochs),
             'hidden_units': int(hidden_units),
@@ -265,6 +267,20 @@ class Classifier(nn.Module):
               f"Train loss: {running_loss / sample_size:7.3f}.. "
               f"Test loss: {test_loss / data_length:7.3f}.. "
               f"Test accuracy: {accuracy / data_length:6.3f}")
+
+    @staticmethod
+    def _read_category_names_json(file_path):
+        """Reads the contents of the specified JSON file
+
+        :param file_path: The path to the JSON file for class-to-idx mapping
+        :return: The class-to-idx mapping
+        """
+        try:
+            with open(file_path.strip(), 'r') as f:
+                return json.load(f)
+        except Exception:
+            print(f'WARNING: error reading file "{file_path}"; no mapping used.')
+            return None
 
     @staticmethod
     def _seconds_to_hhmmss(elapsed):
