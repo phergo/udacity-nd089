@@ -308,6 +308,9 @@ class Classifier(nn.Module):
         :param file_path: The path to the JSON file for class-to-idx mapping
         :return: The class-to-idx mapping
         """
+        if (file_path is None) or (file_path.strip() == ''):
+            return None
+
         try:
             with open(file_path.strip(), 'r') as f:
                 return json.load(f)
