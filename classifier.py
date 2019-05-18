@@ -62,11 +62,15 @@ class Classifier(nn.Module):
         }
 
         # Instance agnostic elements, no need to save-to/load-from checkpoint.
+        self.category_names_file = category_names_file
         self.criterion = nn.NLLLoss()
-        self.data_dirs = self._get_data_directories(data_dir)
         self.data_transforms = self._get_data_transforms()
-        self.data_sets = self._get_image_datasets()
-        self.data_loaders = self._get_data_loaders()
+        if (data_dir is None) or (data_dir.strip() == ''):
+            self.data_dirs = None
+        else:
+            self.data_dirs = self._get_data_directories(data_dir)
+            self.data_sets = self._get_image_datasets()
+            self.data_loaders = self._get_data_loaders()
         self.device = self._get_processing_device(use_gpu)
 
         # Class-level attributes declaration and initialization...
@@ -366,6 +370,15 @@ class Classifier(nn.Module):
         self._initialize_network()  # Initialize the network with the retrieved configuration.
         self.model.load_state_dict(checkpoint['state_dict'])
         print('Checkpoint loaded successfully')  # Will not get here if exception.
+
+        # A class-to-idx file provided at run-time should have precedence over the mapping saved
+        # in the checkpoint. If a mapping file name is present in this instance overwrite the
+        # checkpoint data.
+        if self.category_names_file is not None:
+            json_contents = self._read_category_names_json(self.category_names_file)
+            if json_contents is not None:
+                self.config['category_names'] = json_contents
+                print('Provided class-to-name mapping file supersedes checkpoint mapping data')
 
     def predict(self, image_path, top_k=5):
         """Predict the specified top classes of the provided image (file_path).
