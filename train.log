@@ -1,0 +1,23 @@
+
+.....|Epoch   1 / 10, Step     5: Train loss:   2.812.. Test loss:   1.471.. Test accuracy:  0.744
+.....|Epoch   2 / 10, Step    10: Train loss:   0.459.. Test loss:   0.743.. Test accuracy:  0.814
+.....|Epoch   3 / 10, Step    15: Train loss:   0.107.. Test loss:   0.285.. Test accuracy:  0.907
+.....|Epoch   3 / 10, Step    20: Train loss:   0.568.. Test loss:   1.008.. Test accuracy:  0.791
+.....|Epoch   4 / 10, Step    25: Train loss:   0.312.. Test loss:   0.449.. Test accuracy:  0.837
+.....|Epoch   5 / 10, Step    30: Train loss:   0.198.. Test loss:   0.733.. Test accuracy:  0.791
+.....|Epoch   5 / 10, Step    35: Train loss:   0.359.. Test loss:   0.497.. Test accuracy:  0.884
+.....|Epoch   6 / 10, Step    40: Train loss:   0.376.. Test loss:   0.481.. Test accuracy:  0.884
+.....|Epoch   7 / 10, Step    45: Train loss:   0.205.. Test loss:   0.873.. Test accuracy:  0.860
+.....|Epoch   8 / 10, Step    50: Train loss:   0.058.. Test loss:   0.291.. Test accuracy:  0.930
+.....|Epoch   8 / 10, Step    55: Train loss:   0.288.. Test loss:   1.180.. Test accuracy:  0.791
+.....|Epoch   9 / 10, Step    60: Train loss:   0.234.. Test loss:   0.368.. Test accuracy:  0.930
+.....|Epoch  10 / 10, Step    65: Train loss:   0.072.. Test loss:   0.433.. Test accuracy:  0.907
+.....|Epoch  10 / 10, Step    70: Train loss:   0.315.. Test loss:   0.889.. Test accuracy:  0.814
+
+
+DONE: 
+Epoch  10 / 10, Step    70: Train loss:   0.000.. Test loss:   0.889.. Test accuracy:  0.814
+Total training elapse time: 00:02:18
+Checkpoint saved successfully
+|Estimated network accuracy (on test dataset):  0.904
+
