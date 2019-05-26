@@ -7,7 +7,7 @@
 # PURPOSE: Train a Neural Network to recognize and classify flower images.
 #
 # SAMPLE CALL:
-# python train.py flowers --arch=alexnet --epochs 1 --category_names cat_to_name.json --save_dir checkpoints
+# python train.py flowers_small --arch=alexnet --epochs 1 --category_names cat_to_name_small.json --save_dir checkpoints
 
 import argparse
 from classifier import Classifier

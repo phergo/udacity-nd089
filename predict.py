@@ -7,7 +7,7 @@
 # PURPOSE: Predict the top_k classes of a given flower image file.
 #
 # SAMPLE CALL:
-# python predict.py 'flowers/test/1/image_06743.jpg' checkpoints/alexnet
+# python predict.py 'flowers_small/test/1/image_06743.jpg' checkpoints/alexnet
 
 import argparse
 import os
