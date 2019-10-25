@@ -12,7 +12,7 @@ This project was built with the prerequisites found in the `requirements.txt` fi
 * Python v3.6.8
 * Pytorch v1.1.0
 * TorchVision v0.2.2
-* Pillow v5.2.0
+* Pillow v6.2.0
 * NOTE: A GPU, while ideal, is not necessary.
 
 #### Project files installation
@@ -32,7 +32,7 @@ If required, the full set of image files for the Nanodegree program can be insta
 mkdir flowers
 cd flowers
 curl https://s3.amazonaws.com/content.udacity-data.com/nd089/flower_data.tar.gz | tar xz
-``` 
+```
 
 You should now have `test`, `train` and `valid` directories containing classification directories and flower images under the flowers directory.
 
@@ -104,7 +104,7 @@ python train.py flowers_small --arch=alexnet --epochs 10 --category_names cat_to
 .....|Epoch  10 / 10, Step    70: Train loss:   0.315.. Test loss:   0.889.. Test accuracy:  0.814
 
 
-DONE: 
+DONE:
 Epoch  10 / 10, Step    70: Train loss:   0.000.. Test loss:   0.889.. Test accuracy:  0.814
 Total training elapse time: 00:02:18
 Checkpoint saved successfully
@@ -145,4 +145,3 @@ Checkpoint loaded successfully
 [1.0]
 ['pink primrose']
 ```
-
